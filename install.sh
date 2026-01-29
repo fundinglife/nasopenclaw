@@ -182,7 +182,7 @@ if [ "$SKIP_ONBOARD" = false ]; then
     echo -e "${YELLOW}This will configure your AI provider and channels.${NC}"
     echo -e "${YELLOW}Follow the prompts to complete setup.${NC}\n"
     
-    $COMPOSE_CMD run --rm moltbot-cli onboard
+    $COMPOSE_CMD run --rm moltbot-cli setup && $COMPOSE_CMD run --rm moltbot-cli onboard
     
     log_success "Onboarding complete!"
 fi
