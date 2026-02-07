@@ -22,8 +22,9 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Install Homebrew (required for first-party skills)
-# Create linuxbrew user and grant sudo access (required for Homebrew package installations)
-RUN useradd -m -s /bin/bash linuxbrew && \
+# Create linuxbrew user+group and grant sudo access (required for Homebrew package installations)
+RUN groupadd -f linuxbrew && \
+    useradd -m -s /bin/bash -g linuxbrew linuxbrew && \
     echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
     mkdir -p /home/linuxbrew/.linuxbrew && \
     chown -R linuxbrew:linuxbrew /home/linuxbrew/.linuxbrew
@@ -33,7 +34,9 @@ RUN mkdir -p /home/linuxbrew/.linuxbrew/Homebrew && \
     git clone --depth 1 https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew && \
     mkdir -p /home/linuxbrew/.linuxbrew/bin && \
     ln -s /home/linuxbrew/.linuxbrew/Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew && \
-    chown -R linuxbrew:linuxbrew /home/linuxbrew/.linuxbrew
+    chown -R linuxbrew:linuxbrew /home/linuxbrew/.linuxbrew && \
+    chmod -R g+rwX /home/linuxbrew/.linuxbrew
+    
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 ENV HOMEBREW_NO_AUTO_UPDATE=1
 ENV HOMEBREW_NO_INSTALL_CLEANUP=1
@@ -63,15 +66,12 @@ RUN rm -rf .git node_modules/.cache
 
 # Create app user (node already exists in base image)
 # Add node user to linuxbrew group for Homebrew access
+# Fix permissions for global npm installs
 RUN mkdir -p /home/node/.openclaw /home/node/.openclaw/workspace \
     && chown -R node:node /home/node /app \
     && chmod -R 755 /home/node/.openclaw \
     && usermod -aG linuxbrew node \
     && chmod -R g+w /home/linuxbrew/.linuxbrew
-# Fix permissions for global npm installs
-RUN mkdir -p /home/node/.openclaw /home/node/.openclaw/workspace \
-    && chown -R node:node /home/node /app \
-    && chmod -R 755 /home/node/.openclaw \
     && chown -R node:node /usr/local/lib/node_modules \
     && chown -R node:node /usr/local/bin
 
