@@ -25,7 +25,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/clawbot-docker
+  IMAGE_NAME: ${{ github.repository_owner }}/openclaw-docker
 
 jobs:
   build:

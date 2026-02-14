@@ -1,6 +1,6 @@
 FROM node:22-bookworm
 
-LABEL org.opencontainers.image.source="https://github.com/phioranex/clawbot-docker"
+LABEL org.opencontainers.image.source="https://github.com/phioranex/openclaw-docker"
 LABEL org.opencontainers.image.description="Pre-built OpenClaw (Clawbot) Docker image"
 LABEL org.opencontainers.image.licenses="MIT"
 
