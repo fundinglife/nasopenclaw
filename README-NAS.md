@@ -1,129 +1,166 @@
-# nasopenclaw — OpenClaw for Synology NAS
+# nasopenclaw
 
-> Forked from [phioranex/openclaw-docker](https://github.com/phioranex/openclaw-docker)
+OpenClaw for Synology NAS — forked from [phioranex/openclaw-docker](https://github.com/phioranex/openclaw-docker).
 
-OpenClaw Docker deployment adapted for Synology NAS running DSM 7.x with Docker 20.10.x (no Compose v2 plugin). Uses plain `docker run` commands and Synology-native paths.
-
-## Why this fork?
-
-Synology DSM 7 ships Docker 20.10.x with only **docker-compose v1** (standalone binary). OpenClaw's official installer and phioranex's scripts require `docker compose` (v2 plugin) which is not available. This fork replaces all `docker compose` calls with plain `docker run` commands that work on DSM 7 as-is.
+Four providers, one repo, one compose file with profiles. Each provider is isolated (separate data dir, separate WhatsApp session). No wizard — configs are pre-baked.
 
 ## Requirements
 
-- Synology NAS with DSM 7.x
-- Docker package installed via Package Center
-- SSH access enabled (Control Panel → Terminal & SNMP)
+- Synology DSM 7.x with Docker package installed
+- docker-compose v1.28.5 (bundled with DSM 7 — profiles supported from v1.28.0 ✅)
+- SSH access enabled
 
-## Install
+## Providers
 
-SSH into your NAS, then:
+| Profile | Provider | Port | Auth |
+|---------|----------|------|------|
+| `a` | Anthropic / Claude | 18790 | API key |
+| `o` | OpenAI / Codex | 18791 | OAuth (one-time device flow) |
+| `g` | Google / Gemini | 18792 | API key |
+| `z` | Z.AI / GLM | 18793 | API key |
 
+Only run **one profile at a time** — each has its own WhatsApp session stored in a separate data dir. Running two simultaneously will conflict.
+
+## First-time setup
+
+**1. SSH into the NAS and clone the repo:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/fundinglife/nasopenclaw/main/install-nas.sh | bash
+ssh rohitsoni@ro-nas
+cd /volume1/docker
+git clone https://github.com/fundinglife/nasopenclaw.git nasopenclaw-repo
+cd nasopenclaw-repo
 ```
 
-Or clone and run locally:
-
+**2. Run one-time setup (creates dirs, sets permissions, pulls image):**
 ```bash
-git clone https://github.com/fundinglife/nasopenclaw.git /volume1/docker/nasopenclaw-repo
-bash /volume1/docker/nasopenclaw-repo/install-nas.sh
+bash scripts/setup-nas.sh
 ```
 
-The installer will:
-1. Create `/volume1/docker/nasopenclaw/data` and `/volume1/docker/nasopenclaw/workspace`
-2. Set correct ownership for the container's node user (UID 1000)
-3. Pull `ghcr.io/phioranex/openclaw-docker:latest`
-4. Write helper scripts to `/volume1/docker/nasopenclaw/scripts/`
-5. Run the OpenClaw onboarding wizard
-6. Start the gateway
+**3. Copy your keys into `.env`:**
+```bash
+cp .env.example .env
+nano .env   # or vi .env
+```
 
-## Data locations
+Fill in:
+- `WHATSAPP_NUMBER` — your number in E.164 format e.g. `+12025550123`
+- `ANTHROPIC_API_KEY` — if using profile `a`
+- `GEMINI_API_KEY` — if using profile `g`
+- `ZAI_API_KEY` — if using profile `z`
+- Profile `o` (Codex) needs no key here — see OAuth section below
 
-| Path | Purpose |
-|------|---------|
-| `/volume1/docker/nasopenclaw/data/` | Config, memory, credentials, auth tokens |
-| `/volume1/docker/nasopenclaw/workspace/` | Agent workspace (files the agent can read/write) |
-| `/volume1/docker/nasopenclaw/scripts/` | Helper scripts |
+**4. Symlink configs to the data directory:**
+```bash
+ln -sf /volume1/docker/nasopenclaw-repo/configs /volume1/docker/nasopenclaw/configs
+```
 
-## Daily use scripts
+**5. Start a provider:**
+```bash
+docker-compose --profile a up -d   # Claude
+docker-compose --profile o up -d   # Codex
+docker-compose --profile g up -d   # Gemini
+docker-compose --profile z up -d   # Z.AI
+```
+
+**6. Scan WhatsApp QR (first run only per provider):**
+```bash
+docker logs -f nasopenclaw-a   # swap letter for your profile
+```
+A QR code will appear in the logs. Scan it with WhatsApp → Linked Devices.
+
+## Codex OAuth (profile o — one-time only)
+
+Codex uses OAuth rather than an API key. You already did this, but for reference:
+```bash
+# On the NAS as root:
+codex login --device-code
+# Opens a URL — visit it in any browser, complete login
+# Token saved to /root/.codex/auth.json
+# Mounted read-only into the container automatically
+```
+
+## Daily commands
 
 ```bash
-# Start gateway
-bash /volume1/docker/nasopenclaw/scripts/start.sh
+# Start
+docker-compose --profile a up -d
 
-# Stop gateway
-bash /volume1/docker/nasopenclaw/scripts/stop.sh
+# Stop
+docker-compose --profile a down
 
-# Run onboarding again (re-configure provider, add channels)
-bash /volume1/docker/nasopenclaw/scripts/onboard.sh
+# View logs (including WhatsApp QR on first run)
+docker logs -f nasopenclaw-a
 
-# Run any CLI command (replaces "docker compose run --rm openclaw-cli <cmd>")
-bash /volume1/docker/nasopenclaw/scripts/cli.sh devices list
-bash /volume1/docker/nasopenclaw/scripts/cli.sh devices approve <requestId>
-bash /volume1/docker/nasopenclaw/scripts/cli.sh dashboard --no-open
+# Update image and restart
+bash scripts/update.sh
+```
 
-# Pull latest image and restart
-bash /volume1/docker/nasopenclaw/scripts/update.sh
+## Switching providers
+
+Stop the current one, start the other. Each has its own WhatsApp session so you'll need to re-scan QR if switching to a provider that hasn't been paired yet.
+
+```bash
+docker-compose --profile a down
+docker-compose --profile g up -d
+docker logs -f nasopenclaw-g   # scan QR if first time
 ```
 
 ## DSM Task Scheduler auto-start
 
-To have the gateway start automatically on NAS boot:
+To auto-start your default provider on NAS boot:
 
-1. Open **DSM → Control Panel → Task Scheduler**
-2. Click **Create → Triggered Task → User-defined script**
-3. Configure:
-   - **Task name:** nasopenclaw-gateway
-   - **User:** root
-   - **Event:** Boot-up
-4. In **Task Settings → Run command**, paste:
-   ```bash
-   bash /volume1/docker/nasopenclaw/scripts/start.sh
-   ```
-5. Click **OK**
+1. DSM → Control Panel → Task Scheduler → Create → Triggered Task → User-defined script
+2. User: `root`, Event: `Boot-up`
+3. Run command:
+```bash
+cd /volume1/docker/nasopenclaw-repo && docker-compose --env-file .env --profile a up -d
+```
+4. Change `a` to whichever profile you want as default.
 
-To test without rebooting: select the task and click **Run**.
+## Directory layout on NAS
+
+```
+/volume1/docker/
+├── nasopenclaw-repo/       ← git clone (this repo)
+│   ├── docker-compose.yml
+│   ├── .env                (gitignored — your keys)
+│   ├── configs/
+│   │   ├── openclaw.a.json
+│   │   ├── openclaw.o.json
+│   │   ├── openclaw.g.json
+│   │   └── openclaw.z.json
+│   └── scripts/
+└── nasopenclaw/            ← runtime data (created by setup-nas.sh)
+    ├── data-a/             ← Claude session, memory, WhatsApp
+    ├── data-o/             ← Codex session, memory, WhatsApp
+    ├── data-g/             ← Gemini session, memory, WhatsApp
+    ├── data-z/             ← Z.AI session, memory, WhatsApp
+    └── workspace/          ← shared workspace (all providers)
+```
 
 ## Permissions fix
 
-If you see `EACCES: permission denied` errors in container logs:
-
+If you see `EACCES: permission denied` in container logs:
 ```bash
-sudo chown -R 1000:1000 /volume1/docker/nasopenclaw/data
-sudo chown -R 1000:1000 /volume1/docker/nasopenclaw/workspace
+sudo chown -R 1000:1000 /volume1/docker/nasopenclaw/data-a
+# repeat for data-o, data-g, data-z as needed
 ```
 
-## Provider authentication (OAuth)
+## Config validation
 
-**Codex (ChatGPT Plus OAuth):**
-The onboarding wizard handles device flow. When prompted, open the URL in a browser on any device, complete login, then paste the callback URL back into the terminal.
-
-**Gemini CLI OAuth:**
+If a container exits immediately, check for config errors:
 ```bash
-bash /volume1/docker/nasopenclaw/scripts/cli.sh models auth login --provider google-gemini-cli
+docker logs nasopenclaw-a
+# Look for "Invalid config" — fix the relevant configs/openclaw.*.json
 ```
 
-**GitHub Copilot OAuth:**
-During onboarding, select GitHub Copilot → navigate to `github.com/login/device` → enter the code shown.
+## Notes on Gemini OAuth
 
-**Z.AI / GLM (API key):**
-Set `ANTHROPIC_API_KEY=<your-zai-key>` and `ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic/v1` when prompted during onboarding, or add to openclaw.json after setup.
-
-## Accessing the dashboard remotely
-
-OpenClaw's Control UI runs on port 18789. To access it securely from outside your network, expose it via a Cloudflare Tunnel (do **not** expose it directly to the internet — leaked gateway tokens give full agent access).
-
-## Updating
-
-```bash
-bash /volume1/docker/nasopenclaw/scripts/update.sh
-```
-
-The phioranex image auto-builds daily and tracks the latest OpenClaw release.
+The `google-gemini-cli-auth` plugin has an open bug (missing `client_secret`) as of Feb 2026. Profile `g` uses an API key instead. Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — free tier is 1000 requests/day, 60 RPM.
 
 ## Upstream
 
-- **OpenClaw:** https://github.com/openclaw/openclaw
-- **phioranex image:** https://github.com/phioranex/openclaw-docker
-- **OpenClaw docs:** https://docs.openclaw.ai
-- **ClawHub skills:** https://github.com/VoltAgent/awesome-openclaw-skills
+- OpenClaw: https://github.com/openclaw/openclaw
+- phioranex image: https://github.com/phioranex/openclaw-docker
+- OpenClaw docs: https://docs.openclaw.ai
+- ClawHub skills: https://github.com/VoltAgent/awesome-openclaw-skills

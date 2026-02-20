@@ -1,0 +1,48 @@
+// nasopenclaw-z — Z.AI / GLM
+// Provider: ZAI (Anthropic-compatible endpoint)  |  Port: 18793
+// Env vars required: ZAI_API_KEY, WHATSAPP_NUMBER
+// Z.AI uses Anthropic SDK format: base URL overrides to z.ai endpoint
+{
+  gateway: {
+    port: 18789,
+    mode: "local",
+    bind: "0.0.0.0",
+    auth: {
+      mode: "token",
+      token: "nasopenclaw-z-change-me",
+    },
+    logging: {
+      redactSensitive: true,
+    },
+  },
+  models: {
+    providers: {
+      anthropic: {
+        apiKey: "${ZAI_API_KEY}",
+        baseUrl: "https://api.z.ai/api/anthropic/v1",
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      model: {
+        primary: "anthropic/claude-sonnet-4-5",
+        fallbacks: [
+          "anthropic/claude-haiku-4-5",
+        ],
+      },
+    },
+  },
+  channels: {
+    whatsapp: {
+      dmPolicy: "allowlist",
+      allowFrom: ["${WHATSAPP_NUMBER}"],
+      selfChatMode: false,
+      ackReaction: {
+        emoji: "👀",
+        direct: true,
+      },
+    },
+  },
+}

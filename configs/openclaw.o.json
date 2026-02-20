@@ -1,0 +1,46 @@
+// nasopenclaw-o — OpenAI / Codex
+// Provider: openai-codex (OAuth)  |  Port: 18791
+// Env vars required: WHATSAPP_NUMBER
+// OAuth: run once on NAS → codex login --device-code
+//        token stored at /root/.codex/auth.json, mounted read-only
+{
+  gateway: {
+    port: 18789,
+    mode: "local",
+    bind: "0.0.0.0",
+    auth: {
+      mode: "token",
+      token: "nasopenclaw-o-change-me",
+    },
+    logging: {
+      redactSensitive: true,
+    },
+  },
+  models: {
+    providers: {
+      openai: {
+        // No apiKey — uses Codex OAuth from ~/.codex/auth.json
+        api: "openai-codex",
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      model: {
+        primary: "openai/codex",
+      },
+    },
+  },
+  channels: {
+    whatsapp: {
+      dmPolicy: "allowlist",
+      allowFrom: ["${WHATSAPP_NUMBER}"],
+      selfChatMode: false,
+      ackReaction: {
+        emoji: "👀",
+        direct: true,
+      },
+    },
+  },
+}

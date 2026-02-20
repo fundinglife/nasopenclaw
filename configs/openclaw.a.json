@@ -1,0 +1,46 @@
+// nasopenclaw-a — Anthropic / Claude
+// Provider: anthropic  |  Port: 18790
+// Env vars required: ANTHROPIC_API_KEY, WHATSAPP_NUMBER
+{
+  gateway: {
+    port: 18789,
+    mode: "local",
+    bind: "0.0.0.0",
+    auth: {
+      mode: "token",
+      token: "nasopenclaw-a-change-me",
+    },
+    logging: {
+      redactSensitive: true,
+    },
+  },
+  models: {
+    providers: {
+      anthropic: {
+        apiKey: "${ANTHROPIC_API_KEY}",
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      model: {
+        primary: "anthropic/claude-sonnet-4-5",
+        fallbacks: [
+          "anthropic/claude-haiku-4-5",
+        ],
+      },
+    },
+  },
+  channels: {
+    whatsapp: {
+      dmPolicy: "allowlist",
+      allowFrom: ["${WHATSAPP_NUMBER}"],
+      selfChatMode: false,
+      ackReaction: {
+        emoji: "👀",
+        direct: true,
+      },
+    },
+  },
+}

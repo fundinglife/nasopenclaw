@@ -1,42 +1,104 @@
-services:
-  openclaw-gateway:
-    image: ghcr.io/phioranex/openclaw-docker:latest
-    container_name: openclaw-gateway
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
-    # Uncomment the following line if running on Synology NAS or other systems with UID/GID issues
-    # user: "1000:1000"
-    volumes:
-      - ~/.openclaw:/home/node/.openclaw
-      - ~/.openclaw/workspace:/home/node/.openclaw/workspace
-    ports:
-      - "18789:18789"
-      - "18790:18790"
-    environment:
-      - NODE_ENV=production
-      - OPENCLAW_SKIP_SERVICE_CHECK=true
-    command: ["gateway"]
-  
-  socat-proxy:
-    image: alpine/socat
-    container_name: openclaw-socat
-    restart: unless-stopped
-    network_mode: "service:openclaw-gateway"
-    command: "TCP-LISTEN:18790,fork,bind=0.0.0.0,reuseaddr TCP:127.0.0.1:18789"
+version: "3.9"
 
-  openclaw-cli:
-    image: ghcr.io/phioranex/openclaw-docker:latest
-    container_name: openclaw-cli
-    stdin_open: true
-    tty: true
-    # Uncomment the following line if running on Synology NAS or other systems with UID/GID issues
-    # user: "1000:1000"
+# nasopenclaw — OpenClaw for Synology NAS
+# Forked from phioranex/openclaw-docker
+#
+# Usage (SSH into NAS, cd /volume1/docker/nasopenclaw-repo):
+#   docker-compose --profile a up -d   # Anthropic / Claude
+#   docker-compose --profile o up -d   # OpenAI / Codex
+#   docker-compose --profile g up -d   # Google / Gemini
+#   docker-compose --profile z up -d   # Z.AI / GLM
+#
+# Only run one profile at a time — each uses a separate WhatsApp session
+# stored in its own data dir. Workspace is shared (read/write) across all.
+#
+# Ports:
+#   nasopenclaw-a  →  18790
+#   nasopenclaw-o  →  18791
+#   nasopenclaw-g  →  18792
+#   nasopenclaw-z  →  18793
+
+x-nas-defaults: &nas-defaults
+  image: ghcr.io/phioranex/openclaw-docker:latest
+  restart: unless-stopped
+  stdin_open: true
+  tty: true
+  environment:
+    NODE_ENV: production
+    OPENCLAW_SKIP_SERVICE_CHECK: "true"
+    WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+
+services:
+
+  # ── A: Anthropic / Claude ────────────────────────────────────────────────
+  nasopenclaw-a:
+    <<: *nas-defaults
+    profiles: ["a"]
+    container_name: nasopenclaw-a
+    ports:
+      - "18790:18789"
     volumes:
-      - ~/.openclaw:/home/node/.openclaw
-      - ~/.openclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/data-a:/home/node/.openclaw
+      - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/configs/openclaw.a.json:/home/node/.openclaw/openclaw.json:ro
     environment:
-      - NODE_ENV=production
-    entrypoint: ["node", "/app/dist/index.js"]
-    profiles:
-      - cli
+      NODE_ENV: production
+      OPENCLAW_SKIP_SERVICE_CHECK: "true"
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    command: ["gateway"]
+
+  # ── O: OpenAI / Codex ────────────────────────────────────────────────────
+  nasopenclaw-o:
+    <<: *nas-defaults
+    profiles: ["o"]
+    container_name: nasopenclaw-o
+    ports:
+      - "18791:18789"
+    volumes:
+      - /volume1/docker/nasopenclaw/data-o:/home/node/.openclaw
+      - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/configs/openclaw.o.json:/home/node/.openclaw/openclaw.json:ro
+      # Mount Codex OAuth token (do device flow once: codex login --device-code)
+      - /root/.codex:/home/node/.codex:ro
+    environment:
+      NODE_ENV: production
+      OPENCLAW_SKIP_SERVICE_CHECK: "true"
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+    command: ["gateway"]
+
+  # ── G: Google / Gemini ───────────────────────────────────────────────────
+  nasopenclaw-g:
+    <<: *nas-defaults
+    profiles: ["g"]
+    container_name: nasopenclaw-g
+    ports:
+      - "18792:18789"
+    volumes:
+      - /volume1/docker/nasopenclaw/data-g:/home/node/.openclaw
+      - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/configs/openclaw.g.json:/home/node/.openclaw/openclaw.json:ro
+    environment:
+      NODE_ENV: production
+      OPENCLAW_SKIP_SERVICE_CHECK: "true"
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    command: ["gateway"]
+
+  # ── Z: Z.AI / GLM ────────────────────────────────────────────────────────
+  nasopenclaw-z:
+    <<: *nas-defaults
+    profiles: ["z"]
+    container_name: nasopenclaw-z
+    ports:
+      - "18793:18789"
+    volumes:
+      - /volume1/docker/nasopenclaw/data-z:/home/node/.openclaw
+      - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/configs/openclaw.z.json:/home/node/.openclaw/openclaw.json:ro
+    environment:
+      NODE_ENV: production
+      OPENCLAW_SKIP_SERVICE_CHECK: "true"
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      ZAI_API_KEY: ${ZAI_API_KEY}
+    command: ["gateway"]

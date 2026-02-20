@@ -1,3 +1,8 @@
-# Moltbot Docker
+# nasopenclaw
 
-Build artifacts and temporary files
+# Secrets — never commit
+.env
+
+# Build artifacts
+*.log
+node_modules/

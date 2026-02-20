@@ -1,0 +1,47 @@
+// nasopenclaw-g — Google / Gemini
+// Provider: google (API key)  |  Port: 18792
+// Env vars required: GEMINI_API_KEY, WHATSAPP_NUMBER
+// Get free key (1000 req/day): https://aistudio.google.com/apikey
+{
+  gateway: {
+    port: 18789,
+    mode: "local",
+    bind: "0.0.0.0",
+    auth: {
+      mode: "token",
+      token: "nasopenclaw-g-change-me",
+    },
+    logging: {
+      redactSensitive: true,
+    },
+  },
+  models: {
+    providers: {
+      google: {
+        apiKey: "${GEMINI_API_KEY}",
+      },
+    },
+  },
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      model: {
+        primary: "google/gemini-2.5-pro",
+        fallbacks: [
+          "google/gemini-2.5-flash",
+        ],
+      },
+    },
+  },
+  channels: {
+    whatsapp: {
+      dmPolicy: "allowlist",
+      allowFrom: ["${WHATSAPP_NUMBER}"],
+      selfChatMode: false,
+      ackReaction: {
+        emoji: "👀",
+        direct: true,
+      },
+    },
+  },
+}
