@@ -17,20 +17,8 @@
     }
   },
   "models": {
+    "mode": "merge",
     "providers": {
-      "openai-codex": {
-        "models": [
-          {
-            "id": "gpt-5.3-codex",
-            "name": "Codex (OAuth)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 200000,
-            "maxTokens": 8192
-          }
-        ]
-      },
       "cliproxy": {
         "baseUrl": "https://aiproxy.rohitsoni.com/v1",
         "apiKey": "unused",
@@ -38,7 +26,7 @@
         "models": [
           {
             "id": "claude-sonnet-4-5-20250929",
-            "name": "Claude Sonnet 4.5 (OAuth via CLIProxy)",
+            "name": "Claude Sonnet 4.5 (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -47,7 +35,7 @@
           },
           {
             "id": "claude-haiku-4-5-20251001",
-            "name": "Claude Haiku 4.5 (OAuth via CLIProxy)",
+            "name": "Claude Haiku 4.5 (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -56,7 +44,7 @@
           },
           {
             "id": "claude-opus-4-6",
-            "name": "Claude Opus 4.6 (OAuth via CLIProxy)",
+            "name": "Claude Opus 4.6 (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -65,7 +53,7 @@
           },
           {
             "id": "gemini-2.5-pro",
-            "name": "Gemini 2.5 Pro (OAuth via CLIProxy)",
+            "name": "Gemini 2.5 Pro (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -74,7 +62,7 @@
           },
           {
             "id": "gemini-2.5-flash",
-            "name": "Gemini 2.5 Flash (OAuth via CLIProxy)",
+            "name": "Gemini 2.5 Flash (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -83,7 +71,7 @@
           },
           {
             "id": "gemini-2.5-flash-lite",
-            "name": "Gemini 2.5 Flash Lite (OAuth via CLIProxy)",
+            "name": "Gemini 2.5 Flash Lite (CLIProxy OAuth)",
             "reasoning": false,
             "input": ["text"],
             "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
@@ -91,46 +79,12 @@
             "maxTokens": 65536
           }
         ]
-      },
-      "zai": {
-        "baseUrl": "https://api.z.ai/v1",
-        "apiKey": "${ZAI_API_KEY}",
-        "api": "openai-completions",
-        "models": [
-          {
-            "id": "glm-4.7",
-            "name": "GLM-4.7 (Z.AI)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 128000,
-            "maxTokens": 8192
-          },
-          {
-            "id": "glm-4.6",
-            "name": "GLM-4.6 (Z.AI)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 128000,
-            "maxTokens": 8192
-          },
-          {
-            "id": "glm-4.5",
-            "name": "GLM-4.5 (Z.AI)",
-            "reasoning": false,
-            "input": ["text"],
-            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
-            "contextWindow": 128000,
-            "maxTokens": 8192
-          }
-        ]
       }
     }
   },
   "agents": {
     "defaults": {
-      "workspace": "~/.openclaw/workspace",
+      "workspace": "/home/node/.openclaw/workspace",
       "compaction": { "mode": "safeguard" },
       "maxConcurrent": 4,
       "subagents": { "maxConcurrent": 8 },
