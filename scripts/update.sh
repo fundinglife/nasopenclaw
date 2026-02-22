@@ -7,8 +7,8 @@ IMAGE="ghcr.io/phioranex/openclaw-docker:latest"
 
 # Detect which profile is running
 RUNNING=""
-for p in a o g z; do
-    if $DOCKER ps --format '{{.Names}}' | grep -q "nasopenclaw-$p"; then
+for p in a o g z all; do
+    if $DOCKER ps --format '{{.Names}}' | grep -q "nasopenclaw-$p$"; then
         RUNNING="$p"
         break
     fi
@@ -25,8 +25,9 @@ if [ -n "$RUNNING" ]; then
     echo "Done. nasopenclaw-$RUNNING restarted."
 else
     echo "No nasopenclaw container was running. Start one with:"
-    echo "  docker-compose --profile a up -d   # Claude"
-    echo "  docker-compose --profile o up -d   # Codex"
-    echo "  docker-compose --profile g up -d   # Gemini"
-    echo "  docker-compose --profile z up -d   # Z.AI"
+    echo "  docker-compose --profile a up -d     # Claude (API key)"
+    echo "  docker-compose --profile o up -d     # Codex (OAuth)"
+    echo "  docker-compose --profile g up -d     # Gemini (CLIProxy)"
+    echo "  docker-compose --profile z up -d     # ZAI Claude"
+    echo "  docker-compose --profile all up -d   # ZAI Claude + Gemini (recommended)"
 fi

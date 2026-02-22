@@ -11,13 +11,13 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 echo -e "\n${GREEN}nasopenclaw — NAS setup${NC}\n"
 
 # Create all data dirs
-for dir in data-a data-o data-g data-z workspace configs; do
+for dir in data-a data-o data-g data-z data-all workspace configs; do
     mkdir -p "$BASE/$dir"
     echo "  created $BASE/$dir"
 done
 
 # Set ownership to container's node user
-chown -R 1000:1000 "$BASE/data-a" "$BASE/data-o" "$BASE/data-g" "$BASE/data-z" "$BASE/workspace" 2>/dev/null \
+chown -R 1000:1000 "$BASE/data-a" "$BASE/data-o" "$BASE/data-g" "$BASE/data-z" "$BASE/data-all" "$BASE/workspace" 2>/dev/null \
     || echo -e "${YELLOW}  Warning: chown failed — run as root if you hit permission errors${NC}"
 
 echo ""
@@ -38,7 +38,7 @@ echo "     docker-compose --profile o up -d   # Codex"
 echo "     docker-compose --profile g up -d   # Gemini"
 echo "     docker-compose --profile z up -d   # Z.AI"
 echo ""
-echo "  Ports: a=18790  o=18791  g=18792  z=18793"
+echo "  Ports: a=18790  o=18791  g=18792  z=18793  all=18795"
 echo ""
 echo "  On first run each provider will show a WhatsApp QR code."
 echo "  View it with: docker logs -f nasopenclaw-a  (or -o/-g/-z)"
