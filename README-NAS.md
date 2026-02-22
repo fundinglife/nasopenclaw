@@ -16,7 +16,7 @@ Four providers, one repo, one compose file with profiles. Each provider is isola
 |---------|----------|------|------|
 | `a` | Anthropic / Claude | 18790 | API key |
 | `o` | OpenAI / Codex | 18791 | OAuth (one-time device flow) |
-| `g` | Google / Gemini | 18792 | API key |
+| `g` | Google / Gemini | 18792 | CLIProxy on RO-WIN (no key needed) |
 | `z` | Z.AI / GLM | 18793 | API key |
 
 Only run **one profile at a time** — each has its own WhatsApp session stored in a separate data dir. Running two simultaneously will conflict.
@@ -45,8 +45,8 @@ nano .env   # or vi .env
 Fill in:
 - `WHATSAPP_NUMBER` — your number in E.164 format e.g. `+12025550123`
 - `ANTHROPIC_API_KEY` — if using profile `a`
-- `GEMINI_API_KEY` — if using profile `g`
 - `ZAI_API_KEY` — if using profile `z`
+- Profile `g` (Gemini) needs no key — Gemini is routed through CLIProxy on RO-WIN (see below)
 - Profile `o` (Codex) needs no key here — see OAuth section below
 
 **4. Symlink configs to the data directory:**
@@ -68,16 +68,62 @@ docker logs -f nasopenclaw-a   # swap letter for your profile
 ```
 A QR code will appear in the logs. Scan it with WhatsApp → Linked Devices.
 
+## Gemini via CLIProxy (profile g)
+
+Profile `g` routes Gemini through **CLIProxy** running on RO-WIN (192.168.68.165) rather than
+using a Gemini API key. CLIProxy uses Gemini CLI OAuth (`familyshareuniversal@gmail.com`) and
+exposes an OpenAI-compatible endpoint at `https://aiproxy.rohitsoni.com`.
+
+**Dependency:** RO-WIN must be on and the Cloudflare tunnel must be running. If the NAS can't
+reach `aiproxy.rohitsoni.com`, nasopenclaw-g will fail to respond.
+
+**Models available via `/model`:**
+- `cliproxy/gemini-2.5-pro` (alias: `pro`) — primary
+- `cliproxy/gemini-2.5-flash` (alias: `flash`) — fallback
+- `cliproxy/gemini-2.5-flash-lite` (alias: `lite`) — fallback
+
+**If Gemini stops working** (token expired), re-authenticate on RO-WIN:
+```powershell
+docker exec -it cli-proxy-api ./CLIProxyAPI -login
+# Follow the OAuth flow in your browser
+# Callback port: 8085
+```
+
 ## Codex OAuth (profile o — one-time only)
 
-Codex uses OAuth rather than an API key. You already did this, but for reference:
+Codex uses OAuth via OpenClaw's built-in onboarding. The config for profile `o` is NOT
+mounted from configs/ — it lives in data-o/openclaw.json and is written by onboarding.
+
 ```bash
-# On the NAS as root:
-codex login --device-code
-# Opens a URL — visit it in any browser, complete login
-# Token saved to /root/.codex/auth.json
-# Mounted read-only into the container automatically
+# Run onboarding (only needed if data-o is wiped):
+docker run -it --rm \
+  -v /volume1/docker/nasopenclaw/data-o:/home/node/.openclaw \
+  -v /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace \
+  --env-file /volume1/docker/nasopenclaw-repo/.env \
+  ghcr.io/phioranex/openclaw-docker:latest onboard --auth-choice openai-codex
+
+# After onboarding completes, patch allowlist into the generated config:
+cat > /tmp/patch_config.py << 'EOF'
+import json
+with open('/volume1/docker/nasopenclaw/data-o/openclaw.json') as f:
+    cfg = json.load(f)
+cfg['channels']['whatsapp']['dmPolicy'] = 'allowlist'
+cfg['channels']['whatsapp']['allowFrom'] = ['+13019961639']
+with open('/volume1/docker/nasopenclaw/data-o/openclaw.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+print('done')
+EOF
+python3 /tmp/patch_config.py
 ```
+
+## Credentials backup (profile o)
+
+WhatsApp session credentials are precious — re-pairing requires phone access.
+Backups live at:
+- `/volume1/docker/nasopenclaw/data-o/credentials.bak`  (inside data-o)
+- `/volume1/docker/nasopenclaw_creds_backup_o`           (outside data-o, safe if data-o wiped)
+
+To restore: `cp -r /volume1/docker/nasopenclaw_creds_backup_o /volume1/docker/nasopenclaw/data-o/credentials`
 
 ## Daily commands
 
@@ -154,9 +200,13 @@ docker logs nasopenclaw-a
 # Look for "Invalid config" — fix the relevant configs/openclaw.*.json
 ```
 
-## Notes on Gemini OAuth
+## Notes on Gemini
 
-The `google-gemini-cli-auth` plugin has an open bug (missing `client_secret`) as of Feb 2026. Profile `g` uses an API key instead. Get a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) — free tier is 1000 requests/day, 60 RPM.
+Profile `g` uses CLIProxy on RO-WIN (Gemini CLI OAuth via `familyshareuniversal@gmail.com`).
+No API key required. See the "Gemini via CLIProxy" section above for re-auth instructions.
+
+The previous `google-gemini-cli-auth` OpenClaw plugin approach was abandoned — it had an
+unresolved `client_secret` bug and ToS violation risk. CLIProxy solves both cleanly.
 
 ## Upstream
 

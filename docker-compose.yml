@@ -4,10 +4,11 @@ version: "3.9"
 # Forked from phioranex/openclaw-docker
 #
 # Usage (SSH into NAS, cd /volume1/docker/nasopenclaw-repo):
-#   docker-compose --profile a up -d   # Anthropic / Claude
-#   docker-compose --profile o up -d   # OpenAI / Codex
-#   docker-compose --profile g up -d   # Google / Gemini
-#   docker-compose --profile z up -d   # Z.AI / GLM
+#   docker-compose --profile a up -d     # Anthropic / Claude (API key)
+#   docker-compose --profile o up -d     # OpenAI / Codex (OAuth)
+#   docker-compose --profile g up -d     # Gemini via CLIProxy OAuth
+#   docker-compose --profile z up -d     # Claude via Z.AI
+#   docker-compose --profile all up -d   # Claude (Z.AI) + Gemini (CLIProxy) — recommended
 #
 # Only run one profile at a time — each uses a separate WhatsApp session
 # stored in its own data dir. Workspace is shared (read/write) across all.
@@ -27,6 +28,10 @@ x-nas-defaults: &nas-defaults
     NODE_ENV: production
     OPENCLAW_SKIP_SERVICE_CHECK: "true"
     WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+    GIT_AUTHOR_NAME: ${GITHUB_USER}
+    GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+    GIT_COMMITTER_NAME: ${GITHUB_USER}
+    GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
 
 services:
 
@@ -41,11 +46,17 @@ services:
       - /volume1/docker/nasopenclaw/data-a:/home/node/.openclaw
       - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
       - /volume1/docker/nasopenclaw/configs/openclaw.a.json:/home/node/.openclaw/openclaw.json:ro
+      - /volume1/docker/nasopenclaw/data-a/.gitconfig:/home/node/.gitconfig:ro
+      - /volume1/docker/nasopenclaw/data-a/.git-credentials:/home/node/.git-credentials:ro
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
       WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GIT_AUTHOR_NAME: ${GITHUB_USER}
+      GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+      GIT_COMMITTER_NAME: ${GITHUB_USER}
+      GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
     command: ["gateway"]
 
   # ── O: OpenAI / Codex ────────────────────────────────────────────────────
@@ -58,13 +69,17 @@ services:
     volumes:
       - /volume1/docker/nasopenclaw/data-o:/home/node/.openclaw
       - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
-      - /volume1/docker/nasopenclaw/configs/openclaw.o.json:/home/node/.openclaw/openclaw.json:ro
-      # Mount Codex OAuth token (do device flow once: codex login --device-code)
       - /root/.codex:/home/node/.codex:ro
+      - /volume1/docker/nasopenclaw/data-o/.gitconfig:/home/node/.gitconfig:ro
+      - /volume1/docker/nasopenclaw/data-o/.git-credentials:/home/node/.git-credentials:ro
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
       WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      GIT_AUTHOR_NAME: ${GITHUB_USER}
+      GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+      GIT_COMMITTER_NAME: ${GITHUB_USER}
+      GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
     command: ["gateway"]
 
   # ── G: Google / Gemini ───────────────────────────────────────────────────
@@ -78,11 +93,17 @@ services:
       - /volume1/docker/nasopenclaw/data-g:/home/node/.openclaw
       - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
       - /volume1/docker/nasopenclaw/configs/openclaw.g.json:/home/node/.openclaw/openclaw.json:ro
+      - /volume1/docker/nasopenclaw/data-g/.gitconfig:/home/node/.gitconfig:ro
+      - /volume1/docker/nasopenclaw/data-g/.git-credentials:/home/node/.git-credentials:ro
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
       WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # No GEMINI_API_KEY needed — Gemini routed through CLIProxy OAuth on RO-WIN
+      GIT_AUTHOR_NAME: ${GITHUB_USER}
+      GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+      GIT_COMMITTER_NAME: ${GITHUB_USER}
+      GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
     command: ["gateway"]
 
   # ── Z: Z.AI / GLM ────────────────────────────────────────────────────────
@@ -96,9 +117,42 @@ services:
       - /volume1/docker/nasopenclaw/data-z:/home/node/.openclaw
       - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
       - /volume1/docker/nasopenclaw/configs/openclaw.z.json:/home/node/.openclaw/openclaw.json:ro
+      - /volume1/docker/nasopenclaw/data-z/.gitconfig:/home/node/.gitconfig:ro
+      - /volume1/docker/nasopenclaw/data-z/.git-credentials:/home/node/.git-credentials:ro
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
       WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
       ZAI_API_KEY: ${ZAI_API_KEY}
+      GIT_AUTHOR_NAME: ${GITHUB_USER}
+      GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+      GIT_COMMITTER_NAME: ${GITHUB_USER}
+      GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
+    command: ["gateway"]
+
+  # ── ALL: Z.AI Claude + CLIProxy Gemini ───────────────────────────────────
+  # All-in-one container: Claude via Z.AI + Gemini via CLIProxy OAuth
+  # Switch models mid-session: /model claude, /model haiku, /model pro, /model flash
+  # Dependency: aiproxy.rohitsoni.com (CLIProxy on RO-WIN) must be reachable
+  nasopenclaw-all:
+    <<: *nas-defaults
+    profiles: ["all"]
+    container_name: nasopenclaw-all
+    ports:
+      - "18795:18795"
+    volumes:
+      - /volume1/docker/nasopenclaw/data-all:/home/node/.openclaw
+      - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
+      - /volume1/docker/nasopenclaw/configs/openclaw.all.json:/home/node/.openclaw/openclaw.json:ro
+      - /volume1/docker/nasopenclaw/data-all/.gitconfig:/home/node/.gitconfig:ro
+      - /volume1/docker/nasopenclaw/data-all/.git-credentials:/home/node/.git-credentials:ro
+    environment:
+      NODE_ENV: production
+      OPENCLAW_SKIP_SERVICE_CHECK: "true"
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      ZAI_API_KEY: ${ZAI_API_KEY}
+      GIT_AUTHOR_NAME: ${GITHUB_USER}
+      GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
+      GIT_COMMITTER_NAME: ${GITHUB_USER}
+      GIT_COMMITTER_EMAIL: ${GITHUB_EMAIL}
     command: ["gateway"]
