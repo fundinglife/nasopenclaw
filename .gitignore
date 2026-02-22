@@ -6,3 +6,11 @@
 # Build artifacts
 *.log
 node_modules/
+
+# Test/dev artifacts
+mock_git_repo/
+mock_project/
+mock_project_v3/
+mock_remote/
+output.txt
+test-zai.js
