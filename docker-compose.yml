@@ -143,7 +143,6 @@ services:
     volumes:
       - /volume1/docker/nasopenclaw/data-all:/home/node/.openclaw
       - /volume1/docker/nasopenclaw/workspace:/home/node/.openclaw/workspace
-      - /volume1/docker/nasopenclaw/configs/openclaw.all.json:/home/node/.openclaw/openclaw.json:ro
       - /root/.codex:/home/node/.codex:ro
       - /volume1/docker/nasopenclaw/data-all/.gitconfig:/home/node/.gitconfig:ro
       - /volume1/docker/nasopenclaw/data-all/.git-credentials:/home/node/.git-credentials:ro
