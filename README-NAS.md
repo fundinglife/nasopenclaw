@@ -125,6 +125,22 @@ Backups live at:
 
 To restore: `cp -r /volume1/docker/nasopenclaw_creds_backup_o /volume1/docker/nasopenclaw/data-o/credentials`
 
+## Updating the `all` profile config
+
+Unlike other profiles, `nasopenclaw-all` does NOT mount its config read-only. OpenClaw must be able to write to `openclaw.json` at runtime (plugin state, meta, etc). The config lives in `data-all/openclaw.json`.
+
+`configs/openclaw.all.json` in this repo is the **source of truth**. After changing it, deploy to NAS:
+
+```bash
+# On NAS after git pull:
+cp /volume1/docker/nasopenclaw/configs/openclaw.all.json /volume1/docker/nasopenclaw/data-all/openclaw.json
+chown 1000:1000 /volume1/docker/nasopenclaw/data-all/openclaw.json
+chmod 644 /volume1/docker/nasopenclaw/data-all/openclaw.json
+docker-compose --profile all down && docker-compose --profile all up -d
+```
+
+**WhatsApp credentials** are in `data-all/credentials/` — do NOT wipe this directory. They are shared with `data-o` (same device slot). Backup lives at `/volume1/docker/nasopenclaw_creds_backup_all`.
+
 ## Daily commands
 
 ```bash
