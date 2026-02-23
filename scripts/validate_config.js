@@ -14,20 +14,25 @@ function stripJsonComments(str) {
   return result;
 }
 
-// openclaw.a.json uses JS object syntax (unquoted keys, trailing commas) — valid JSONC
-// that OpenClaw accepts natively, but JSON.parse rejects. Skip strict parse for that file.
-const jsonc_only = new Set(["openclaw.a.json"]);
+// openclaw.a.json and openclaw.o.json use JS object syntax (unquoted keys, trailing
+// commas) — valid JSONC that OpenClaw accepts natively, but JSON.parse rejects.
+const jsonc_only = new Set(["openclaw.a.json", "openclaw.o.json"]);
+
+// Resolve configs relative to this script's location (scripts/ -> configs/)
+const path = require("path");
+const configDir = path.join(__dirname, "..", "configs");
 
 const configs = [
-  "C:\\_projects_\\nasopenclaw\\configs\\openclaw.a.json",
-  "C:\\_projects_\\nasopenclaw\\configs\\openclaw.g.json",
-  "C:\\_projects_\\nasopenclaw\\configs\\openclaw.z.json",
-  "C:\\_projects_\\nasopenclaw\\configs\\openclaw.all.json",
+  path.join(configDir, "openclaw.a.json"),
+  path.join(configDir, "openclaw.o.json"),
+  path.join(configDir, "openclaw.g.json"),
+  path.join(configDir, "openclaw.z.json"),
+  path.join(configDir, "openclaw.all.json"),
 ];
 
 let allValid = true;
 for (const p of configs) {
-  const name = p.split("\\").pop();
+  const name = path.basename(p);
   try {
     const txt = fs.readFileSync(p, "utf8");
     if (jsonc_only.has(name)) {

@@ -22,6 +22,6 @@ SOFTWARE.
 
 ---
 
-Note: This repository provides Docker packaging for Moltbot.
-Moltbot itself is a separate project with its own license.
-See: https://github.com/moltbot/moltbot
+Note: This repository provides Docker packaging for OpenClaw.
+OpenClaw itself is a separate project with its own license.
+See: https://github.com/openclaw/openclaw

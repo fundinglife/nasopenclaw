@@ -190,13 +190,16 @@ cd /volume1/docker/nasopenclaw-repo && docker-compose --env-file .env --profile 
 │   │   ├── openclaw.a.json
 │   │   ├── openclaw.o.json
 │   │   ├── openclaw.g.json
-│   │   └── openclaw.z.json
-│   └── scripts/
+│   │   ├── openclaw.z.json
+│   │   └── openclaw.all.json
+│   ├── scripts/
+│   └── tools/              ← Python agent tools (run on RO-WIN via SSH)
 └── nasopenclaw/            ← runtime data (created by setup-nas.sh)
     ├── data-a/             ← Claude session, memory, WhatsApp
     ├── data-o/             ← Codex session, memory, WhatsApp
     ├── data-g/             ← Gemini session, memory, WhatsApp
     ├── data-z/             ← Z.AI session, memory, WhatsApp
+    ├── data-all/           ← All-in-one session (Claude + Gemini)
     └── workspace/          ← shared workspace (all providers)
 ```
 
@@ -223,6 +226,21 @@ No API key required. See the "Gemini via CLIProxy" section above for re-auth ins
 
 The previous `google-gemini-cli-auth` OpenClaw plugin approach was abandoned — it had an
 unresolved `client_secret` bug and ToS violation risk. CLIProxy solves both cleanly.
+
+## Files not used by the NAS setup
+
+These files are inherited from the upstream [phioranex/openclaw-docker](https://github.com/phioranex/openclaw-docker) fork and are **not used** in the NAS compose-based workflow. They remain in the repo for upstream compatibility.
+
+| File | Purpose (upstream) | Why unused here |
+|------|--------------------|-----------------|
+| `README.md` | Upstream Docker image docs | NAS docs are in `README-NAS.md` |
+| `install.sh` | One-liner Linux/Mac installer | NAS uses `scripts/setup-nas.sh` + compose profiles |
+| `install.ps1` | One-liner Windows installer | NAS uses `scripts/setup-nas.sh` + compose profiles |
+| `uninstall.sh` | One-liner Linux/Mac uninstaller | NAS: just `docker-compose --profile X down` |
+| `uninstall.ps1` | One-liner Windows uninstaller | NAS: just `docker-compose --profile X down` |
+| `Dockerfile` | Builds the Docker image | NAS pulls pre-built image from `ghcr.io` |
+| `.github/workflows/` | CI to build and push the image | Only runs on the upstream phioranex repo |
+| `.last-openclaw-version` | Tracks upstream release for CI | Only used by the CI workflow above |
 
 ## Upstream
 

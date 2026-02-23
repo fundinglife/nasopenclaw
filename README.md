@@ -1,3 +1,5 @@
+> **This file is from the upstream [phioranex/openclaw-docker](https://github.com/phioranex/openclaw-docker) fork and is not used by the NAS setup. For NAS documentation see [README-NAS.md](README-NAS.md).**
+
 # OpenClaw (Clawbot) Docker Image
 
 Pre-built Docker image for [OpenClaw](https://github.com/openclaw/openclaw) — run your AI assistant in seconds without building from source.
@@ -26,10 +28,6 @@ This will:
 - ✅ Pull the pre-built image
 - ✅ Run the onboarding wizard
 - ✅ Start the gateway
-
-### Install Options
-
-**Linux / macOS:**
 
 ### Install Options
 
