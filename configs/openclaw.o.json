@@ -1,6 +1,6 @@
 // nasopenclaw-o — OpenAI / Codex
 // Provider: openai-codex (OAuth)  |  Port: 18791
-// Env vars required: WHATSAPP_NUMBER
+// Env vars required: TELEGRAM_BOT_TOKEN
 // OAuth: run once on NAS → codex login --device-code
 //        token stored at /root/.codex/auth.json, mounted read-only
 {
@@ -33,14 +33,11 @@
     },
   },
   channels: {
-    whatsapp: {
-      dmPolicy: "allowlist",
-      allowFrom: ["${WHATSAPP_NUMBER}"],
-      selfChatMode: false,
-      ackReaction: {
-        emoji: "👀",
-        direct: true,
-      },
+    telegram: {
+      enabled: true,
+      botToken: "${TELEGRAM_BOT_TOKEN}",
+      dmPolicy: "pairing",
+      groups: { "*": { requireMention: true } },
     },
   },
 }

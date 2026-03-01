@@ -66,7 +66,7 @@ class TestValidateConfigJS(unittest.TestCase):
         config = json.dumps({
             "models": {"providers": {"test": {}}},
             "agents": {"defaults": {"model": {"primary": "test/m"}}},
-            "channels": {"whatsapp": {}},
+            "channels": {"telegram": {}},
         })
         tmpdir, script = self._make_temp_validator({
             "openclaw.g.json": config,
@@ -100,7 +100,7 @@ class TestValidateConfigJS(unittest.TestCase):
         config = json.dumps({
             "gateway": {"port": 1}, "models": {"providers": {"t": {}}},
             "agents": {"defaults": {"model": {"primary": "t"}}},
-            "channels": {"whatsapp": {}},
+            "channels": {"telegram": {}},
         })
         tmpdir, script = self._make_temp_validator({
             "openclaw.g.json": config,

@@ -157,7 +157,7 @@ CLISCRIPT
 cat > "$SCRIPTS_DIR/onboard.sh" <<ONBOARDSCRIPT
 #!/bin/bash
 # Run OpenClaw onboarding wizard
-# Run this once on first install to configure provider, WhatsApp, etc.
+# Run this once on first install to configure provider, Telegram, etc.
 DOCKER="/volume1/@appstore/Docker/usr/bin/docker"
 IMAGE="ghcr.io/phioranex/openclaw-docker:latest"
 DATA_DIR="/volume1/docker/nasopenclaw/data"
@@ -192,7 +192,7 @@ ok "Scripts written to $SCRIPTS_DIR"
 # ── Onboarding ────────────────────────────────────────────────────────────────
 if [[ "$SKIP_ONBOARD" == "false" ]]; then
     step "Running onboarding wizard..."
-    echo -e "${YELLOW}Configure your AI provider, WhatsApp, and channels.${NC}"
+    echo -e "${YELLOW}Configure your AI provider, Telegram, and channels.${NC}"
     echo -e "${YELLOW}Follow the prompts. You can re-run onboarding later with:${NC}"
     echo -e "  bash $SCRIPTS_DIR/onboard.sh\n"
 

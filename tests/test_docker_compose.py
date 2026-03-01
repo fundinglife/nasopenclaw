@@ -131,12 +131,12 @@ class TestDockerCompose(unittest.TestCase):
 
     # ── Environment variables ───────────────────────────────────────────
 
-    def test_whatsapp_number_in_all_services(self):
+    def test_telegram_token_in_all_services(self):
         for svc in ["nasopenclaw-a", "nasopenclaw-o", "nasopenclaw-g",
                      "nasopenclaw-z", "nasopenclaw-all"]:
             block = self._service_block(svc)
-            self.assertIn("WHATSAPP_NUMBER", block,
-                          f"{svc} missing WHATSAPP_NUMBER")
+            self.assertIn("TELEGRAM_BOT_TOKEN", block,
+                          f"{svc} missing TELEGRAM_BOT_TOKEN")
 
     def test_anthropic_key_in_service_a(self):
         block = self._service_block("nasopenclaw-a")

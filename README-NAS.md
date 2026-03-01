@@ -2,7 +2,7 @@
 
 OpenClaw for Synology NAS — forked from [phioranex/openclaw-docker](https://github.com/phioranex/openclaw-docker).
 
-Four providers, one repo, one compose file with profiles. Each provider is isolated (separate data dir, separate WhatsApp session). No wizard — configs are pre-baked.
+Four providers, one repo, one compose file with profiles. Each provider is isolated (separate data dir, separate Telegram bot session). No wizard — configs are pre-baked.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ Four providers, one repo, one compose file with profiles. Each provider is isola
 | `g` | Google / Gemini | 18792 | CLIProxy on RO-WIN (no key needed) |
 | `z` | Z.AI / GLM | 18793 | API key |
 
-Only run **one profile at a time** — each has its own WhatsApp session stored in a separate data dir. Running two simultaneously will conflict.
+Only run **one profile at a time** — each has its own Telegram bot session stored in a separate data dir. Running two simultaneously will conflict.
 
 ## First-time setup
 
@@ -43,7 +43,7 @@ nano .env   # or vi .env
 ```
 
 Fill in:
-- `WHATSAPP_NUMBER` — your number in E.164 format e.g. `+12025550123`
+- `TELEGRAM_BOT_TOKEN` — from @BotFather on Telegram
 - `ANTHROPIC_API_KEY` — if using profile `a`
 - `ZAI_API_KEY` — if using profile `z`
 - Profile `g` (Gemini) needs no key — Gemini is routed through CLIProxy on RO-WIN (see below)
@@ -62,11 +62,11 @@ docker-compose --profile g up -d   # Gemini
 docker-compose --profile z up -d   # Z.AI
 ```
 
-**6. Scan WhatsApp QR (first run only per provider):**
+**6. Pair with your Telegram bot (first run only per provider):**
 ```bash
 docker logs -f nasopenclaw-a   # swap letter for your profile
 ```
-A QR code will appear in the logs. Scan it with WhatsApp → Linked Devices.
+Open Telegram, find your bot (e.g. @ROOpenClawBot), and send it any message. A pairing code will appear in the logs — approve it to link your account.
 
 ## Gemini via CLIProxy (profile g)
 
@@ -102,13 +102,18 @@ docker run -it --rm \
   --env-file /volume1/docker/nasopenclaw-repo/.env \
   ghcr.io/phioranex/openclaw-docker:latest onboard --auth-choice openai-codex
 
-# After onboarding completes, patch allowlist into the generated config:
+# After onboarding completes, patch Telegram config into the generated config:
 cat > /tmp/patch_config.py << 'EOF'
 import json
 with open('/volume1/docker/nasopenclaw/data-o/openclaw.json') as f:
     cfg = json.load(f)
-cfg['channels']['whatsapp']['dmPolicy'] = 'allowlist'
-cfg['channels']['whatsapp']['allowFrom'] = ['+13019961639']
+cfg['channels']['telegram'] = {
+    'enabled': True,
+    'botToken': '${TELEGRAM_BOT_TOKEN}',
+    'dmPolicy': 'pairing',
+    'groups': {'*': {'requireMention': True}}
+}
+cfg['channels'].pop('whatsapp', None)
 with open('/volume1/docker/nasopenclaw/data-o/openclaw.json', 'w') as f:
     json.dump(cfg, f, indent=2)
 print('done')
@@ -118,12 +123,7 @@ python3 /tmp/patch_config.py
 
 ## Credentials backup (profile o)
 
-WhatsApp session credentials are precious — re-pairing requires phone access.
-Backups live at:
-- `/volume1/docker/nasopenclaw/data-o/credentials.bak`  (inside data-o)
-- `/volume1/docker/nasopenclaw_creds_backup_o`           (outside data-o, safe if data-o wiped)
-
-To restore: `cp -r /volume1/docker/nasopenclaw_creds_backup_o /volume1/docker/nasopenclaw/data-o/credentials`
+Telegram bot tokens are easy to regenerate via @BotFather if lost. No special credential backup is needed (unlike the previous WhatsApp setup which required QR re-pairing).
 
 ## Updating the `all` profile config
 
@@ -139,7 +139,7 @@ chmod 644 /volume1/docker/nasopenclaw/data-all/openclaw.json
 docker-compose --profile all down && docker-compose --profile all up -d
 ```
 
-**WhatsApp credentials** are in `data-all/credentials/` — do NOT wipe this directory. They are shared with `data-o` (same device slot). Backup lives at `/volume1/docker/nasopenclaw_creds_backup_all`.
+Telegram bot tokens are configured via `TELEGRAM_BOT_TOKEN` in `.env` — no credential files to preserve in the data directory.
 
 ## Daily commands
 
@@ -150,7 +150,7 @@ docker-compose --profile a up -d
 # Stop
 docker-compose --profile a down
 
-# View logs (including WhatsApp QR on first run)
+# View logs (including Telegram pairing code on first run)
 docker logs -f nasopenclaw-a
 
 # Update image and restart
@@ -159,12 +159,12 @@ bash scripts/update.sh
 
 ## Switching providers
 
-Stop the current one, start the other. Each has its own WhatsApp session so you'll need to re-scan QR if switching to a provider that hasn't been paired yet.
+Stop the current one, start the other. All profiles share the same Telegram bot token from `.env`.
 
 ```bash
 docker-compose --profile a down
 docker-compose --profile g up -d
-docker logs -f nasopenclaw-g   # scan QR if first time
+docker logs -f nasopenclaw-g   # check for pairing code if first time
 ```
 
 ## DSM Task Scheduler auto-start
@@ -195,10 +195,10 @@ cd /volume1/docker/nasopenclaw-repo && docker-compose --env-file .env --profile 
 │   ├── scripts/
 │   └── tools/              ← Python agent tools (run on RO-WIN via SSH)
 └── nasopenclaw/            ← runtime data (created by setup-nas.sh)
-    ├── data-a/             ← Claude session, memory, WhatsApp
-    ├── data-o/             ← Codex session, memory, WhatsApp
-    ├── data-g/             ← Gemini session, memory, WhatsApp
-    ├── data-z/             ← Z.AI session, memory, WhatsApp
+    ├── data-a/             ← Claude session, memory, Telegram
+    ├── data-o/             ← Codex session, memory, Telegram
+    ├── data-g/             ← Gemini session, memory, Telegram
+    ├── data-z/             ← Z.AI session, memory, Telegram
     ├── data-all/           ← All-in-one session (Claude + Gemini)
     └── workspace/          ← shared workspace (all providers)
 ```

@@ -40,7 +40,7 @@ for (const p of configs) {
       continue;
     }
     const parsed = JSON.parse(stripJsonComments(txt));
-    const missing = ["gateway.port","models.providers","agents.defaults.model.primary","channels.whatsapp"]
+    const missing = ["gateway.port","models.providers","agents.defaults.model.primary","channels.telegram"]
       .filter(k => k.split(".").reduce((o,key) => o && o[key], parsed) === undefined);
     if (missing.length) { console.error("INVALID: " + name + " — missing: " + missing.join(", ")); allValid = false; }
     else {

@@ -128,18 +128,15 @@
   },
   "plugins": {
     "entries": {
-      "whatsapp": { "enabled": true }
+      "telegram": { "enabled": true }
     }
   },
   "channels": {
-    "whatsapp": {
-      "dmPolicy": "allowlist",
-      "allowFrom": ["${WHATSAPP_NUMBER}"],
-      "selfChatMode": false,
-      "ackReaction": {
-        "emoji": "👀",
-        "direct": true
-      }
+    "telegram": {
+      "enabled": true,
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "pairing",
+      "groups": { "*": { "requireMention": true } }
     }
   }
 }

@@ -81,7 +81,7 @@ class TestStrictJsonConfigs(unittest.TestCase):
         self.assertIn("providers", cfg["models"])
         self.assertIn("agents", cfg)
         self.assertIn("channels", cfg)
-        self.assertIn("whatsapp", cfg["channels"])
+        self.assertIn("telegram", cfg["channels"])
 
     def test_z_has_required_keys(self):
         cfg = parse_strict_config("openclaw.z.json")
@@ -118,18 +118,18 @@ class TestStrictJsonConfigs(unittest.TestCase):
         models = cfg["models"]["providers"]["cliproxy"]["models"]
         self.assertGreaterEqual(len(models), 6, "openclaw.all.json should have 6+ models")
 
-    def test_whatsapp_uses_env_var(self):
+    def test_telegram_uses_env_var(self):
         for name in STRICT_JSON_FILES:
             cfg = parse_strict_config(name)
-            allow_from = cfg["channels"]["whatsapp"]["allowFrom"]
-            self.assertIn("${WHATSAPP_NUMBER}", allow_from,
-                          f"{name} allowFrom should reference WHATSAPP_NUMBER")
+            bot_token = cfg["channels"]["telegram"]["botToken"]
+            self.assertEqual(bot_token, "${TELEGRAM_BOT_TOKEN}",
+                             f"{name} botToken should reference TELEGRAM_BOT_TOKEN")
 
-    def test_whatsapp_dm_policy_allowlist(self):
+    def test_telegram_dm_policy_pairing(self):
         for name in STRICT_JSON_FILES:
             cfg = parse_strict_config(name)
-            self.assertEqual(cfg["channels"]["whatsapp"]["dmPolicy"], "allowlist",
-                             f"{name} should use allowlist dmPolicy")
+            self.assertEqual(cfg["channels"]["telegram"]["dmPolicy"], "pairing",
+                             f"{name} should use pairing dmPolicy")
 
 
 class TestJsoncConfigs(unittest.TestCase):
@@ -153,12 +153,12 @@ class TestJsoncConfigs(unittest.TestCase):
 
     def test_a_contains_structural_keys(self):
         raw = read_config("openclaw.a.json")
-        for key in ["gateway", "models", "agents", "channels", "whatsapp"]:
+        for key in ["gateway", "models", "agents", "channels", "telegram"]:
             self.assertIn(key, raw, f"openclaw.a.json missing key reference: {key}")
 
     def test_o_contains_structural_keys(self):
         raw = read_config("openclaw.o.json")
-        for key in ["gateway", "models", "agents", "channels", "whatsapp"]:
+        for key in ["gateway", "models", "agents", "channels", "telegram"]:
             self.assertIn(key, raw, f"openclaw.o.json missing key reference: {key}")
 
     def test_a_references_anthropic(self):

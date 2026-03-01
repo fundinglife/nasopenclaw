@@ -10,7 +10,7 @@ version: "3.9"
 #   docker-compose --profile z up -d     # Claude via Z.AI
 #   docker-compose --profile all up -d   # Claude (Z.AI) + Gemini (CLIProxy) — recommended
 #
-# Only run one profile at a time — each uses a separate WhatsApp session
+# Only run one profile at a time — each uses a separate Telegram bot session
 # stored in its own data dir. Workspace is shared (read/write) across all.
 #
 # Ports:
@@ -27,7 +27,7 @@ x-nas-defaults: &nas-defaults
   environment:
     NODE_ENV: production
     OPENCLAW_SKIP_SERVICE_CHECK: "true"
-    WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+    TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     GIT_AUTHOR_NAME: ${GITHUB_USER}
     GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
     GIT_COMMITTER_NAME: ${GITHUB_USER}
@@ -51,7 +51,7 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
-      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GIT_AUTHOR_NAME: ${GITHUB_USER}
       GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
@@ -75,7 +75,7 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
-      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       GIT_AUTHOR_NAME: ${GITHUB_USER}
       GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
       GIT_COMMITTER_NAME: ${GITHUB_USER}
@@ -98,7 +98,7 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
-      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       # No GEMINI_API_KEY needed — Gemini routed through CLIProxy OAuth on RO-WIN
       GIT_AUTHOR_NAME: ${GITHUB_USER}
       GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
@@ -122,7 +122,7 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
-      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ZAI_API_KEY: ${ZAI_API_KEY}
       GIT_AUTHOR_NAME: ${GITHUB_USER}
       GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
@@ -149,7 +149,7 @@ services:
     environment:
       NODE_ENV: production
       OPENCLAW_SKIP_SERVICE_CHECK: "true"
-      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       ZAI_API_KEY: ${ZAI_API_KEY}
       GIT_AUTHOR_NAME: ${GITHUB_USER}
       GIT_AUTHOR_EMAIL: ${GITHUB_EMAIL}
