@@ -141,6 +141,36 @@ docker-compose --profile all down && docker-compose --profile all up -d
 
 Telegram bot tokens are configured via `TELEGRAM_BOT_TOKEN` in `.env` — no credential files to preserve in the data directory.
 
+## Per-group coding workflow
+
+Each Telegram group can be a separate coding project. The agent clones repos on demand to `/tmp/` inside the container — no persistent repos on the NAS. GitHub is the source of truth.
+
+**How it works:**
+1. Create a Telegram group for a project (e.g. "nasOpenClaw Dev")
+2. Add `@ROOpenClawBot` to the group
+3. Mention the bot: `@ROOpenClawBot clone fundinglife/nasopenclaw and fix the bug in...`
+4. The agent clones to `/tmp/nasopenclaw`, creates a feature branch, and works
+5. The agent commits and pushes as it goes
+6. On container restart, `/tmp/` is wiped — the code lives in GitHub
+
+**GitHub auth:** Add a fine-grained PAT to `.env` (scoped to your org, Contents read/write):
+```bash
+GITHUB_TOKEN=github_pat_...
+```
+
+**Per-group systemPrompt (optional):** To pin a group to a specific repo, edit the config:
+```json
+"groups": {
+  "-100XXXXXXXXXX": {
+    "requireMention": false,
+    "systemPrompt": "You are working on nasOpenClaw. Repo: https://github.com/fundinglife/nasopenclaw.git\nClone to /tmp/nasopenclaw using git clone https://git:$GITHUB_TOKEN@github.com/fundinglife/nasopenclaw.git /tmp/nasopenclaw"
+  },
+  "*": { "requireMention": true }
+}
+```
+
+**Getting the group ID:** Check container logs after adding the bot — the group chat ID (a negative number like `-1001234567890`) appears when someone mentions the bot.
+
 ## Daily commands
 
 ```bash

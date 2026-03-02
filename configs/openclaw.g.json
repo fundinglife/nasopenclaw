@@ -74,7 +74,12 @@
       "enabled": true,
       "botToken": "${TELEGRAM_BOT_TOKEN}",
       "dmPolicy": "pairing",
-      "groups": { "*": { "requireMention": true } }
+      "groups": {
+        "*": {
+          "requireMention": true,
+          "systemPrompt": "Git workflow:\n1. On first coding request, clone the repo to /tmp/<project> using: git clone https://git:$GITHUB_TOKEN@github.com/ORG/REPO.git /tmp/<project>\n2. cd into /tmp/<project> and work there\n3. Create a feature branch for your changes\n4. Commit and push frequently as you work\n5. Always commit and push before finishing a task\n6. /tmp is ephemeral — nothing persists after container restart\n\nAsk which repo to work on if the user hasn't specified one."
+        }
+      }
     }
   }
 }

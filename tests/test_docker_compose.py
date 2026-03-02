@@ -150,6 +150,13 @@ class TestDockerCompose(unittest.TestCase):
         block = self._service_block("nasopenclaw-all")
         self.assertIn("ZAI_API_KEY", block)
 
+    def test_github_token_in_all_services(self):
+        for svc in ["nasopenclaw-a", "nasopenclaw-o", "nasopenclaw-g",
+                     "nasopenclaw-z", "nasopenclaw-all"]:
+            block = self._service_block(svc)
+            self.assertIn("GITHUB_TOKEN", block,
+                          f"{svc} missing GITHUB_TOKEN")
+
     def test_git_config_in_all_services(self):
         for svc in ["nasopenclaw-a", "nasopenclaw-o", "nasopenclaw-g",
                      "nasopenclaw-z", "nasopenclaw-all"]:
